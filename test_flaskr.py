@@ -7,13 +7,15 @@ import os
 SERVER_TOKEN = os.environ['SERVER_TOKEN']
 MANAGER_TOKEN = os.environ['MANAGER_TOKEN']
 
+database_path = os.environ['DATABASE_URL_TEST']
+if database_path.startswith("postgres://"):
+  database_path = database_path.replace("postgres://", "postgresql://", 1)
 
 class RestaurantTestCase(unittest.TestCase):
   def setUp(self) -> None:
       self.app = create_app()
       self.client = self.app.test_client
-      self.database_name = 'capstone_test'
-      self.database_path = 'postgresql://{}:{}@{}/{}'.format('postgres', 'postgres', 'localhost:5432', self.database_name)
+      self.database_path = database_path
       db = setup_db(self.app, self.database_path)
 
   def tearDown(self) -> None:
