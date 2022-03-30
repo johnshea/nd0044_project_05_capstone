@@ -41,7 +41,7 @@ pip3 install -r requirements.txt
 
 Create the Postgres Database.
 ```bash
-createdb capstone
+createdb -U postgres capstone
 ```
 Define the flask environment variables.
 ```
@@ -50,7 +50,7 @@ export FLASK_DEBUG=true
 ```
 Setup the database schema by running the migration scripts.
 ```
-flask db upgrade
+python manage.py db upgrade
 ```
 
 Run the app.
@@ -94,7 +94,7 @@ API Permissions
 `create:employees` - Create employees	
 `update:employees` - Update employees
 
-In order to make user management easier, the API has the following roles:
+To make user management easier, the API has the following roles (RBAC):
 
 Manager - Manager (All permissions listed above.)
 Server - Wait staff (Only `read:checks` and `read:employees`)
@@ -109,7 +109,10 @@ Manager Role
 Email address: manager_marnie@example.com
 Password: ManagerOne2022!
 
-To create a valid and current JWT, in an incognito tab browse to the login endpoint listed below then use the credentials listed above for the user/role you wish to impersonate. Copy the JWT returned by Auth0 in the URL.
+To create a valid and current JWT,
+1. In an incognito tab browse to the login endpoint listed
+2. Use the credentials listed above for the user/role you wish to impersonate
+3. Copy the `access_token` (JWT) returned by Auth0 in the URL.
 
 Auth0 Login Endpoint
 https://nd0044-project-05-capstone.us.auth0.com/authorize?audience=restaurant&response_type=token&client_id=90ZsHcWVmtxIaPvs87p1yuw52UmJrb1i&redirect_uri=http://localhost:5000/login-results
@@ -165,7 +168,7 @@ Returns "Hello Capstone!"
 ### GET `/checks`
 Permission required: `read:checks`
 
-Returns a list of all checks ordered by their id in ascending order.
+If authorized, returns a list of all checks ordered by their id in ascending order.
 
 Example request
 `$ curl -X GET  http://127.0.0.1:5000/checks`
@@ -199,11 +202,20 @@ Example response
     "total_checks": 5
 }
 ```
+If unauthorized, returns JSON object with a `401` error code.
 
+Example response
+```
+{
+  "error": 401, 
+  "message": "Unauthorized", 
+  "success": false
+}
+```
 ### GET `/employees`
 Permission required: `read:employees`
 
-Returns a list of all employees ordered by their id in ascending order.
+If authorized, returns a list of all employees ordered by their id in ascending order.
 
 Example request
 `$ curl -X GET  http://127.0.0.1:5000/employees`
@@ -233,11 +245,20 @@ Example response
     "total_employees": 4
 }
 ```
+If unauthorized, returns JSON object with a `401` error code.
+
+Example response
+```
+{
+  "error": 401, 
+  "message": "Unauthorized", 
+  "success": false
+}
+```
 ### DELETE `/employees/<int:employee_id>`
 Permission required: `delete:employees`
 
 Deletes an employee based on their id.
-If the id does not exist, an error code of `404` is returned.
 
 Example request
 `$ curl -X DELETE -H "Authorization: Bearer <JWT token>" http://127.0.0.1:5000/employees/1`
@@ -249,11 +270,19 @@ Example response
     'id': 1
 }
 ```
+If the id does not exist, an error code of `404` is returned.
 
+Example response
+```{
+    "error": 404,
+    "message": "Not Found",
+    "success": false
+}
+```
 ### POST `/employees`
 Permission required: `create:employees`
 
-Creates an employee based on the provided name.
+If authorized, creates an employee based on the provided name.
 If the body is empty or the name is not provided, an error code of `400` is returned.
 
 Example request
@@ -267,11 +296,21 @@ Example response
     'id': 1
 }
 ```
+If unauthorized, returns JSON object with a `401` error code.
+
+Example response
+```
+{
+  "error": 401, 
+  "message": "Unauthorized", 
+  "success": false
+}
+```
+
 ### PATCH `/employees/<int:employee_id>`
 Permission required: `update:employees`
 
 Updates an employee's name based on their their id.
-If the body is empty or the id does not exist, an error code of `400` is returned.
 
 Example request
 `$ curl -X PATCH -d '{"name": "New Name"}' -H "Content-Type: application/json" -H "Authorization: Bearer <JWT token>" http://127.0.0.1:5000/employees/1`
@@ -281,5 +320,15 @@ Example response
 {
     'success': True,
     'id': 1
+}
+```
+If the id does not exist, an error code of `404` is returned.
+If the body is empty, an error code of `400` is returned.
+
+Example response
+```{
+    "error": 404,
+    "message": "Not Found",
+    "success": false
 }
 ```
