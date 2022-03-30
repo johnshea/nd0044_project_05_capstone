@@ -7,10 +7,12 @@ AUTH0_DOMAIN = 'nd0044-project-05-capstone.us.auth0.com'
 ALGORITHMS = ['RS256']
 API_AUDIENCE = 'restaurant'
 
+
 class AuthError(Exception):
     def __init__(self, error, status_code):
         self.error = error
         self.status_code = status_code
+
 
 def get_token_auth_header():
     headers = request.headers
@@ -41,18 +43,19 @@ def get_token_auth_header():
         token = auth_header.split()[1]
         return token
 
+
 def verify_decode_jwt(token):
     jsonurl = requests.get(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
     jwks = jsonurl.json()
 
     try:
-      unverified_header = jwt.get_unverified_header(token)
-    except:
+        unverified_header = jwt.get_unverified_header(token)
+    except Exception as e:
         raise AuthError({
             'code': 'invalid_header',
             'description': 'Authorization malformed.'
         }, 401)
-    
+
     rsa_key = {}
     if 'kid' not in unverified_header:
         raise AuthError({
@@ -105,6 +108,7 @@ def verify_decode_jwt(token):
                 'description': 'Unable to find the appropriate key.'
             }, 400)
 
+
 def check_permissions(permission, payload):
     if 'permissions' not in payload:
         raise AuthError({
@@ -123,6 +127,7 @@ def check_permissions(permission, payload):
         )
 
     return True
+
 
 def requires_auth(permission=''):
     def requires_auth_decorator(f):
